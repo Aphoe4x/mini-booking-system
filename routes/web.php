@@ -5,7 +5,7 @@ use App\Http\Controllers\BookingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('/bookings');
+    return redirect('/bookings');
 });
 
 Route::get('/dashboard', function () {
