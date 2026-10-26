@@ -1,4 +1,4 @@
-<header class="bg-white border-b border-slate-200 sticky top-0 z-10 h-16 flex items-center justify-between px-6 lg:px-8">
+<header x-data="{ open: false, theme: 'light' }" class="bg-white border-b border-slate-200 sticky top-0 z-10 h-16 flex items-center justify-between px-6 lg:px-8">
     <div class="flex items-center gap-4">
         <button
             @click="open = ! open"
