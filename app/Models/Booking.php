@@ -48,4 +48,12 @@ class Booking extends Model
                      ->orderBy('booking_date')
                      ->orderBy('booking_time');
     }
+
+    // Scope: past bookings (before today), soonest first
+    public function scopePast(Builder $query): Builder
+    {
+        return $query->where('booking_date', '<', now()->toDateString())
+                     ->orderByDesc('booking_date')
+                     ->orderByDesc('booking_time');
+    }
 }

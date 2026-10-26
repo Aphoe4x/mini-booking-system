@@ -5,16 +5,28 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
+use App\Mail\BookingStatusChanged;
 
 class BookingController extends Controller
 {
+    // Business hours configuration
+    const BUSINESS_HOURS_START = 9;   // 9:00 AM
+    const BUSINESS_HOURS_END = 18;    // 6:00 PM
+    const BUSINESS_DAYS = [1, 2, 3, 4, 5]; // Monday through Friday
+
     // List the logged-in user's own bookings
     public function index()
     {
-        $bookings = Booking::forUser(Auth::id())->upcoming()->get();
+        Log::info('BookingController@index called', ['path' => request()->path(), 'url' => request()->url()]);
+        $userId = Auth::id();
 
-        return view('bookings.index', compact('bookings'));
+        $upcoming = Booking::forUser($userId)->upcoming()->get();
+        $past = Booking::forUser($userId)->past()->get();
+
+        return view('bookings.index', compact('upcoming', 'past'));
     }
 
     public function create()
@@ -31,6 +43,23 @@ class BookingController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
+        // Business hours validation
+        $bookingDateTime = \Carbon\Carbon::parse($validated['booking_date'] . ' ' . $validated['booking_time']);
+        $dayOfWeek = (int) $bookingDateTime->format('N'); // 1=Monday, 7=Sunday
+        $hour = (int) $bookingDateTime->format('H');
+
+        if (! in_array($dayOfWeek, self::BUSINESS_DAYS)) {
+            return back()
+                ->withInput()
+                ->withErrors(['booking_date' => 'Bookings are only available Monday through Friday.']);
+        }
+
+        if ($hour < self::BUSINESS_HOURS_START || $hour >= self::BUSINESS_HOURS_END) {
+            return back()
+                ->withInput()
+                ->withErrors(['booking_time' => 'Bookings are only available between 9:00 AM and 6:00 PM.']);
+        }
+
         // Guard against double-booking the same slot (belt and braces —
         // the DB unique constraint is the real safety net)
         $slotTaken = Booking::where('service_name', $validated['service_name'])
@@ -45,11 +74,18 @@ class BookingController extends Controller
                 ->withErrors(['booking_time' => 'That slot is already booked. Please choose another time.']);
         }
 
-        Booking::create([
+        $booking = Booking::create([
             'user_id' => Auth::id(),
             ...$validated,
             'status' => 'pending',
         ]);
+
+        // Send confirmation email to client
+        try {
+            Mail::to(Auth::user()->email)->send(new BookingStatusChanged($booking, 'pending'));
+        } catch (\Exception $e) {
+            // Log but don't fail the booking
+        }
 
         return redirect()
             ->route('bookings.index')
@@ -61,8 +97,17 @@ class BookingController extends Controller
     {
         abort_unless($booking->user_id === Auth::id(), 403);
 
+        $previousStatus = $booking->status;
+
         if ($booking->status !== 'cancelled') {
             $booking->update(['status' => 'cancelled']);
+
+            // Send cancellation email to client
+            try {
+                Mail::to($booking->user->email)->send(new BookingStatusChanged($booking, $previousStatus));
+            } catch (\Exception $e) {
+                // Log but don't fail
+            }
         }
 
         return back()->with('success', 'Booking cancelled.');
@@ -87,7 +132,16 @@ class BookingController extends Controller
             'status' => ['required', Rule::in(['confirmed', 'cancelled'])],
         ]);
 
+        $previousStatus = $booking->status;
+
         $booking->update($validated);
+
+        // Send status change email to client
+        try {
+            Mail::to($booking->user->email)->send(new BookingStatusChanged($booking, $previousStatus));
+        } catch (\Exception $e) {
+            // Log but don't fail
+        }
 
         return back()->with('success', "Booking #{$booking->id} marked as {$validated['status']}.");
     }

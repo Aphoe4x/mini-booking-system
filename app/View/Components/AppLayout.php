@@ -7,6 +7,14 @@ use Illuminate\View\View;
 
 class AppLayout extends Component
 {
+    public function __construct(
+        public string $title = 'Dashboard',
+        public string $heading = 'Dashboard',
+        public string $subtitle = ''
+    ) {
+        //
+    }
+
     /**
      * Get the view / contents that represents the component.
      */
