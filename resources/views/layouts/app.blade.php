@@ -33,56 +33,56 @@
         <x-app-nav />
 
         <div class="flex min-h-[calc(100vh-4rem)]">
-            <!-- Sidebar: off-canvas drawer on mobile/tablet, always visible on desktop -->
-            <aside
-                :class="$store.sidebar.open ? 'translate-x-0' : '-translate-x-full lg:hidden'"
-                class="fixed top-16 bottom-0 left-0 z-40 w-64 max-w-[85vw] shrink-0 overflow-y-auto transform border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-transform duration-200 ease-out lg:static lg:top-0 lg:bottom-auto lg:max-w-none"
-                aria-label="Sidebar"
-            >
-                <div class="flex items-center h-16 border-b border-slate-200 dark:border-slate-700 px-6 shrink-0">
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2 text-slate-900 dark:text-white font-semibold text-lg tracking-tight group">
-                        <svg class="h-7 w-7 text-blue-600 dark:text-blue-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 011 1M7 20h4v-2H7z" />
-                        </svg>
-                        <span>{{ config('app.name', 'Book with Aphoe') }}</span>
-                    </a>
-                </div>
+        <!-- Sidebar: off-canvas drawer on mobile/tablet, always visible on desktop -->
+        <aside
+            :class="$store.sidebar.open ? 'translate-x-0' : '-translate-x-full lg:hidden'"
+            class="fixed left-0 top-16 bottom-0 z-40 w-64 max-w-[85vw] shrink-0 overflow-y-auto transform border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-transform duration-300 ease-out lg:static lg:top-0 lg:bottom-auto lg:max-w-none"
+            aria-label="Sidebar"
+        >
+            <div class="flex items-center h-16 border-b border-slate-200 dark:border-slate-700 px-6 shrink-0">
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-2 text-slate-900 dark:text-white font-semibold text-lg tracking-tight group">
+                    <svg class="h-7 w-7 text-blue-600 dark:text-blue-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011-1v4a1 1 0 011 1M7 20h4v-2H7z" />
+                    </svg>
+                    <span>{{ config('app.name', 'Book with Aphoe') }}</span>
+                </a>
+            </div>
 
-                <nav class="flex-1 px-4 py-6 space-y-1" aria-label="Sidebar" @click="$store.sidebar.close()">
-                    <x-dashboard-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Home') }}
-                    </x-dashboard-nav-link>
+            <nav class="flex-1 px-4 py-6 space-y-1" aria-label="Sidebar" @click="$store.sidebar.close()">
+                <x-dashboard-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    {{ __('Home') }}
+                </x-dashboard-nav-link>
 
-                    <x-dashboard-nav-link :href="route('companies.index')" :active="request()->routeIs('companies.*')">
-                        {{ __('Browse Companies') }}
-                    </x-dashboard-nav-link>
+                <x-dashboard-nav-link :href="route('companies.index')" :active="request()->routeIs('companies.*')">
+                    {{ __('Browse Companies') }}
+                </x-dashboard-nav-link>
 
-                    <x-dashboard-nav-link :href="route('bookings.index')" :active="request()->routeIs('bookings.index', 'bookings.show')">
-                        {{ __('My Bookings') }}
-                    </x-dashboard-nav-link>
+                <x-dashboard-nav-link :href="route('bookings.index')" :active="request()->routeIs('bookings.index', 'bookings.show')">
+                    {{ __('My Bookings') }}
+                </x-dashboard-nav-link>
 
-                    <x-dashboard-nav-link :href="route('bookings.create')" :active="request()->routeIs('bookings.create')">
-                        {{ __('New Booking') }}
-                    </x-dashboard-nav-link>
+                <x-dashboard-nav-link :href="route('bookings.create')" :active="request()->routeIs('bookings.create')">
+                    {{ __('New Booking') }}
+                </x-dashboard-nav-link>
 
-                    @if (Auth::user()->isAdmin())
-                        <div class="border-t border-slate-100 dark:border-slate-700 pt-4 mt-4 space-y-1">
-                            <x-dashboard-nav-link :href="route('admin.bookings')" :active="request()->routeIs('admin.*')">
-                                {{ __('All Bookings') }}
-                            </x-dashboard-nav-link>
-                        </div>
-                    @endif
-                </nav>
-            </aside>
+                @if (Auth::user()->isAdmin())
+                    <div class="border-t border-slate-100 dark:border-slate-700 pt-4 mt-4 space-y-1">
+                        <x-dashboard-nav-link :href="route('admin.bookings')" :active="request()->routeIs('admin.*')">
+                            {{ __('All Bookings') }}
+                        </x-dashboard-nav-link>
+                    </div>
+                @endif
+            </nav>
+        </aside>
 
-            <!-- Mobile sidebar backdrop -->
-            <div
-                x-cloak
-                x-show="$store.sidebar.open"
-                x-transition.opacity
-                @click="$store.sidebar.close()"
-                class="fixed inset-0 top-16 z-30 bg-slate-900/50 backdrop-blur-sm lg:hidden"
-            ></div>
+        <!-- Mobile sidebar backdrop -->
+        <div
+            x-cloak
+            x-show="$store.sidebar.open"
+            x-transition.opacity
+            @click="$store.sidebar.close()"
+            class="fixed inset-0 top-16 z-30 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+        ></div>
 
             <!-- Main content -->
             <main class="flex-1 flex flex-col min-w-0">
@@ -123,7 +123,7 @@
                     </div>
                 </div>
             </main>
-</div>
+        </div>
 
     </body>
 </html>
