@@ -1,17 +1,21 @@
 <?php
 
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\BookingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect('/bookings');
 });
 
-Route::get('/dashboard', DashboardController::class)
+Route::get('/home', DashboardController::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+// Keep old dashboard links working.
+Route::redirect('/dashboard', '/home');
 
 Route::middleware('auth')->group(function () {
 
@@ -23,6 +27,10 @@ Route::middleware('auth')->group(function () {
     // Admin-only routes (also protected inside the controller via isAdmin())
     Route::get('/admin/bookings', [BookingController::class, 'adminIndex'])->name('admin.bookings');
     Route::patch('/admin/bookings/{booking}/status', [BookingController::class, 'updateStatus'])->name('admin.bookings.status');
+
+    // Companies
+    Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');
+    Route::get('/companies/{company}', [CompanyController::class, 'show'])->name('companies.show');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -4,13 +4,13 @@
             <svg class="h-8 w-8 text-blue-600 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 011 1M7 20h4v-2H7z" />
             </svg>
-            <span>{{ config('app.name', 'Mini Booking') }}</span>
+            <span>{{ config('app.name', 'Book with Aphoe') }}</span>
         </a>
     </div>
 
     <div class="mt-8">
         <h2 class="mt-6 text-center text-3xl font-extrabold text-slate-900 tracking-tight">Sign in</h2>
-        <p class="mt-2 text-center text-sm text-slate-600">Welcome back to your booking dashboard.</p>
+        <p class="mt-2 text-center text-sm text-slate-600">Sign in to Book with Aphoe, your personal booking agent for trusted local companies.</p>
 
         <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-6">
             @csrf

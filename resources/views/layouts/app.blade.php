@@ -5,7 +5,18 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Mini Booking') }} — {{ $title ?? 'Dashboard' }}</title>
+        <title>{{ config('app.name', 'Book with Aphoe') }} — {{ $title ?? 'Home' }}</title>
+
+        <!-- Apply the saved theme before paint to avoid a white flash -->
+        <script>
+            (function () {
+                const saved = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = saved ? saved === 'dark' : prefersDark;
+                document.documentElement.classList.toggle('dark', isDark);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            })();
+        </script>
 
         <!-- Favicon -->
         <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
@@ -17,37 +28,36 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans">
+    <body x-data class="bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased font-sans">
 
         <x-app-nav />
 
-        <div x-data="{ open: false }" class="flex flex-col lg:flex-row min-h-screen">
-            <!-- Sidebar (always visible on desktop, togglable on mobile/tablet) -->
+        <div class="flex min-h-[calc(100vh-4rem)]">
+            <!-- Sidebar: off-canvas drawer on mobile/tablet, always visible on desktop -->
             <aside
-                x-show="open"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0"
-                class="fixed lg:relative lg:static lg:inset-0 lg:h-full lg:w-64 lg:border-r lg:border-slate-200 dark:border-slate-700 z-40 bg-white dark:bg-slate-900 hidden lg:flex flex-col"
+                :class="$store.sidebar.open ? 'translate-x-0' : '-translate-x-full lg:hidden'"
+                class="fixed top-16 bottom-0 left-0 z-40 w-64 max-w-[85vw] shrink-0 overflow-y-auto transform border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-transform duration-200 ease-out lg:static lg:top-0 lg:bottom-auto lg:max-w-none"
+                aria-label="Sidebar"
             >
                 <div class="flex items-center h-16 border-b border-slate-200 dark:border-slate-700 px-6 shrink-0">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-2 text-slate-900 dark:text-white font-semibold text-lg tracking-tight group">
                         <svg class="h-7 w-7 text-blue-600 dark:text-blue-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 011 1M7 20h4v-2H7z" />
                         </svg>
-                        <span>{{ config('app.name', 'Mini Booking') }}</span>
+                        <span>{{ config('app.name', 'Book with Aphoe') }}</span>
                     </a>
                 </div>
 
-                <nav class="flex-1 px-4 py-6 space-y-1" aria-label="Sidebar">
+                <nav class="flex-1 px-4 py-6 space-y-1" aria-label="Sidebar" @click="$store.sidebar.close()">
                     <x-dashboard-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
+                        {{ __('Home') }}
                     </x-dashboard-nav-link>
 
-                    <x-dashboard-nav-link :href="route('bookings.index')" :active="request()->routeIs('bookings.*')">
+                    <x-dashboard-nav-link :href="route('companies.index')" :active="request()->routeIs('companies.*')">
+                        {{ __('Browse Companies') }}
+                    </x-dashboard-nav-link>
+
+                    <x-dashboard-nav-link :href="route('bookings.index')" :active="request()->routeIs('bookings.index', 'bookings.show')">
                         {{ __('My Bookings') }}
                     </x-dashboard-nav-link>
 
@@ -64,6 +74,15 @@
                     @endif
                 </nav>
             </aside>
+
+            <!-- Mobile sidebar backdrop -->
+            <div
+                x-cloak
+                x-show="$store.sidebar.open"
+                x-transition.opacity
+                @click="$store.sidebar.close()"
+                class="fixed inset-0 top-16 z-30 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+            ></div>
 
             <!-- Main content -->
             <main class="flex-1 flex flex-col min-w-0">
@@ -92,7 +111,7 @@
                     <div class="max-w-7xl mx-auto">
                         <div class="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
                             <div>
-                                <h1 class="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">{{ $heading ?? __('Dashboard') }}</h1>
+                                <h1 class="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">{{ $heading ?? __('Home') }}</h1>
                                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ $subtitle ?? '' }}</p>
                             </div>
                             <div class="flex flex-col sm:flex-row gap-3">
@@ -104,20 +123,7 @@
                     </div>
                 </div>
             </main>
-        </div>
-
-        <!-- Mobile sidebar overlay -->
-        <div
-            x-show="open"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-            @click.away="open = false"
-            class="fixed inset-0 z-20 bg-black/50 lg:hidden"
-        ></div>
+</div>
 
     </body>
 </html>

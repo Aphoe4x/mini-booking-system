@@ -8,8 +8,8 @@ use Illuminate\View\View;
 class AppLayout extends Component
 {
     public function __construct(
-        public string $title = 'Dashboard',
-        public string $heading = 'Dashboard',
+        public string $title = 'Home',
+        public string $heading = 'Home',
         public string $subtitle = ''
     ) {
         //

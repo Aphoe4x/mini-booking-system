@@ -2,19 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BookingStatusChanged;
 use App\Models\Booking;
+use App\Models\Company;
+use App\Models\CompanyService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
-use App\Mail\BookingStatusChanged;
 
 class BookingController extends Controller
 {
     // Business hours configuration
     const BUSINESS_HOURS_START = 9;   // 9:00 AM
+
     const BUSINESS_HOURS_END = 18;    // 6:00 PM
+
     const BUSINESS_DAYS = [1, 2, 3, 4, 5]; // Monday through Friday
 
     // List the logged-in user's own bookings
@@ -29,22 +34,41 @@ class BookingController extends Controller
         return view('bookings.index', compact('upcoming', 'past'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('bookings.create');
+        $companies = Company::active()
+            ->whereHas('companyServices', fn ($query) => $query->where('is_available', true))
+            ->with(['services' => fn ($query) => $query->wherePivot('is_available', true)])
+            ->orderBy('name')
+            ->get();
+
+        $preselectedCompany = $request->integer('company') ?: null;
+        $preselectedService = $request->integer('service') ?: null;
+
+        return view('bookings.create', compact('companies', 'preselectedCompany', 'preselectedService'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'service_name' => 'required|string|max:255',
+            'company_service_id' => 'required|exists:company_services,id',
             'booking_date' => 'required|date|after_or_equal:today',
             'booking_time' => 'required|date_format:H:i',
             'notes' => 'nullable|string|max:1000',
         ]);
 
+        // Never trust a price posted by the browser — look it up from the database.
+        $companyService = CompanyService::with(['service', 'company'])
+            ->where('is_available', true)
+            ->findOrFail($validated['company_service_id']);
+
+        abort_unless($companyService->company?->is_active, 404);
+
+        $serviceName = "{$companyService->service->name} at {$companyService->company->name}";
+        $bookingTime = Carbon::createFromFormat('H:i', $validated['booking_time'])->format('H:i:s');
+
         // Business hours validation
-        $bookingDateTime = \Carbon\Carbon::parse($validated['booking_date'] . ' ' . $validated['booking_time']);
+        $bookingDateTime = Carbon::parse($validated['booking_date'].' '.$validated['booking_time']);
         $dayOfWeek = (int) $bookingDateTime->format('N'); // 1=Monday, 7=Sunday
         $hour = (int) $bookingDateTime->format('H');
 
@@ -60,11 +84,10 @@ class BookingController extends Controller
                 ->withErrors(['booking_time' => 'Bookings are only available between 9:00 AM and 6:00 PM.']);
         }
 
-        // Guard against double-booking the same slot (belt and braces —
-        // the DB unique constraint is the real safety net)
-        $slotTaken = Booking::where('service_name', $validated['service_name'])
-            ->where('booking_date', $validated['booking_date'])
-            ->where('booking_time', $validated['booking_time'])
+        // Guard against double-booking the same slot
+        $slotTaken = Booking::where('company_service_id', $validated['company_service_id'])
+            ->whereDate('booking_date', $validated['booking_date'])
+            ->where('booking_time', $bookingTime)
             ->where('status', '!=', 'cancelled')
             ->exists();
 
@@ -76,7 +99,12 @@ class BookingController extends Controller
 
         $booking = Booking::create([
             'user_id' => Auth::id(),
-            ...$validated,
+            'company_service_id' => $companyService->id,
+            'service_name' => $serviceName,
+            'price_paid' => $companyService->price,
+            'booking_date' => $validated['booking_date'],
+            'booking_time' => $bookingTime,
+            'notes' => $validated['notes'] ?? null,
             'status' => 'pending',
         ]);
 

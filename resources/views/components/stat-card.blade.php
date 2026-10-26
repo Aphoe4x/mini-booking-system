@@ -29,7 +29,7 @@
                 {{ $color === 'rose' ? 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400' : '' }}
                 {{ $color === 'indigo' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : '' }}
             ">
-                {{ $icon ?? '' }}
+                {!! $icon ?? '' !!}
             </div>
         </div>
     </div>
