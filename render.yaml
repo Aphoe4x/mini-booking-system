@@ -1,0 +1,60 @@
+# Render Blueprint for Book with Aphoe
+# Docs: https://render.com/docs/blueprint-spec
+#
+# NOTE: Render's free Postgres expires 30 days after creation. To keep the
+# database permanently, create a free Neon database and replace the DB_URL
+# value with its connection string (see README).
+
+databases:
+  - name: book-with-aphoe-db
+    plan: free
+    databaseName: book_with_aphoe
+    user: book_with_aphoe
+    region: oregon
+
+services:
+  - type: web
+    name: book-with-aphoe
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /up
+    autoDeployTrigger: commit
+    envVars:
+      - key: APP_NAME
+        value: Book with Aphoe
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        fromService:
+          name: book-with-aphoe
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: APP_LOCALE
+        value: en
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: info
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: book-with-aphoe-db
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_SECURE_COOKIE
+        value: true
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: MAIL_MAILER
+        value: log

@@ -110,6 +110,26 @@ Tailwind and Vite compile ahead of time:
 - Never push to `origin/main` without explicit user confirmation.
 - Do not rewrite published history or force-push shared branches.
 
+## Deployment (Render)
+
+Deployment is Docker-based and defined as code:
+
+| File | Purpose |
+| --- | --- |
+| `Dockerfile` | Multi-stage: Node builds Vite assets, PHP 8.3 + nginx + php-fpm runs the app |
+| `.dockerignore` | Excludes `.env`, `vendor`, `node_modules`, `public/build`, SQLite, tests |
+| `docker/start.sh` | Normalises `APP_KEY`, renders the nginx port, caches config/views, migrates, seeds if empty, starts supervisor |
+| `docker/nginx.conf.template` | Listens on `$PORT` (`__PORT__` substituted at startup) |
+| `render.yaml` | Blueprint: free web service + free Postgres + env vars |
+
+Rules:
+
+- Do **not** bake `APP_KEY` or other secrets into the image or `render.yaml`.
+- Assets are built inside Docker; do not commit `public/build`.
+- `route:cache` is intentionally **not** used because `/` is a closure route.
+- Render's free Postgres expires after 30 days; swapping `DB_URL` to a Neon connection string requires no code changes.
+- Test image changes locally with `docker build -t book-with-aphoe .` before pushing.
+
 ## When in doubt
 
 1. Read the relevant controller and its feature test first.
