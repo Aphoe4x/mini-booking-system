@@ -2,7 +2,8 @@
 
 A multi-company booking marketplace built with Laravel. Aphoe sits between companies and their clients: companies publish the services they offer and their prices, and clients browse, compare and book available slots in one place.
 
-> **Live demo:** not currently hosted. The previous Railway instance is no longer active — run it locally with the [quick start](#quick-start), or deploy to Render with the included [Blueprint](#deploying-to-render).
+> **Live demo:** <https://book-with-aphoe.onrender.com> (Render free tier — the first request after 15 minutes of
+> inactivity can take ~1 minute while the instance wakes up).
 
 ![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php&logoColor=white)
 ![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white)
@@ -237,12 +238,19 @@ This repo ships with everything Render needs:
 
 ### Deploy
 
+This repository is already deployed as the `book-with-aphoe` web service (Docker, Oregon, free plan) at
+<https://book-with-aphoe.onrender.com>. To redeploy from scratch with your own account:
+
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Aphoe4x/mini-booking-system)
 
 1. Push the repo to GitHub (already done).
 2. In the Render Dashboard choose **New → Blueprint** and select this repository.
 3. Render reads `render.yaml` and creates the web service + database. Click **Apply**.
 4. The first build takes ~5–10 minutes. When it goes live, open the `onrender.com` URL.
+
+> Render allows **one active free Postgres per workspace**. If you already have one (this workspace reuses
+> `todo-list-db` with a separate `book_with_aphoe` database), remove the `databases:` block from `render.yaml`
+> and set `DB_URL` to your existing instance before applying the Blueprint.
 
 The database is migrated automatically and demo accounts are seeded on the first boot:
 

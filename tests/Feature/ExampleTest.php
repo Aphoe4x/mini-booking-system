@@ -6,8 +6,8 @@ use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    public function test_the_application_redirects_to_bookings(): void
+    public function test_the_application_redirects_guests_to_registration(): void
     {
-        $this->get('/')->assertRedirect('/bookings');
+        $this->get('/')->assertRedirect('/register');
     }
 }

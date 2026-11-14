@@ -57,5 +57,10 @@
                 </button>
             </div>
         </form>
+
+        <p class="mt-6 text-center text-sm text-slate-600">
+            New to Book with Aphoe?
+            <a href="{{ route('register') }}" class="font-medium text-blue-600 hover:text-blue-500">Create an account</a>
+        </p>
     </div>
 </x-guest-layout>

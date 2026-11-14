@@ -7,7 +7,9 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect('/bookings');
+    return auth()->check()
+        ? redirect('/bookings')
+        : redirect()->route('register');
 });
 
 Route::get('/home', DashboardController::class)
